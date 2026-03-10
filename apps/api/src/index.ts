@@ -1,15 +1,15 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
+// import dotenv from 'dotenv';
+// import path from 'path';
+// import { fileURLToPath } from 'url';
 
-// ESM-specific __dirname replacement
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// // ESM-specific __dirname replacement
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
-// Load .env from monorepo root
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+// // Load .env from monorepo root
+// dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 const app = express();
 
