@@ -1,0 +1,24 @@
+{
+  "name": "paste-bin-clone",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npm run docker:up && concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "docker:up": "docker compose -f docker-compose.yml up -d",
+    "dev:api": "node --env-file=.env --import tsx --watch apps/api/src/index.ts",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "db:push": "node --env-file=.env npx drizzle-kit push --config=apps/api/drizzle.config.ts",
+    "db:studio": "node --env-file=.env npx drizzle-kit studio --config=apps/api/drizzle.config.ts"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
