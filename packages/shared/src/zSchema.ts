@@ -22,6 +22,8 @@ export type PasteSlug = z.infer<typeof ViewPasteSchema>;
 
 export const SearchSchema = z.object({
   keyword: z.string()
+  .trim()  
   .min(1, "At least 1 character")
   .max(100, "Keyword is too long"),
+  cursor: z.string().datetime({ message: "Invalid cursor format" }).optional(),
 });

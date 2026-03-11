@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { db } from './db/index.js';
 import { pastes } from './db/schema.js';
-import { count, eq, sql, ilike, or, gt, not, and, isNull } from 'drizzle-orm';
+import { count, eq, sql, ilike, or, gt, not, and, isNull, desc, lt } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import type { CreatePasteInput, Paste } from '@pastebin/shared';
 import { CreatePasteSchema, SearchSchema, ViewPasteSchema } from '@pastebin/shared';
@@ -75,11 +75,12 @@ app.post('/api/createPaste', async (req, res) => {
 //search by keyword in title and content
 app.get('/api/search', async (req, res) => {
   try {
+    const LIMIT = 10;
     const result = SearchSchema.safeParse(req.query);
     if (!result.success) {
       return res.status(400).json({ error: result.error.format() });
     }
-    const { keyword } = result.data;
+    const { keyword, cursor } = result.data;
     if (!keyword) {
       return res.status(400).json({ message: 'Keyword is required' });
     }
@@ -95,9 +96,11 @@ app.get('/api/search', async (req, res) => {
         or(
           isNull(pastes.expiresAt),
           gt(pastes.expiresAt, sql`now()`)
-        )
+        ),
+        cursor ? lt(pastes.createdAt, new Date(cursor as string)) : undefined
       )
-    )
+    ).orderBy(desc(pastes.createdAt))
+    .limit(LIMIT)
 
     res.status(200).json(searchResult);
   } catch (error) {

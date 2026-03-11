@@ -9,9 +9,9 @@ async function main() {
   // Optional: Clear existing pastes
   // await db.delete(pastes);
 
-  const seedData = Array.from({ length: 20 }).map((el, idx) => ({
+  const seedData = Array.from({ length: 60 }).map((el, idx) => ({
     slug: nanoid(21),
-    title: `public ${idx}`,
+    title: `public ${idx}.1`,
     content: faker.lorem.paragraphs(3),
     visibility: "public" as const,
     expiresAt: null, // "Never Expire"

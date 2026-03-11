@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useSearchPaste } from '../hooks/use-search-paste';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SearchSchema, type Paste } from '@pastebin/shared';
+import { useInView } from 'react-intersection-observer';
 
 export const Route = createFileRoute('/search')({
   component: SearchPaste,
@@ -9,9 +10,24 @@ export const Route = createFileRoute('/search')({
 
 function SearchPaste() {
   const [keyword, setKeyword] = useState<string>('')
-  const [result, setResult] = useState<Paste[]>([])
   const [errMsg, setErrMsg] = useState<string>('')
-  const { data, isLoading, isError, error, refetch } = useSearchPaste(keyword);
+  const { data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useSearchPaste(keyword)
+
+  const { ref, inView } = useInView()
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const searchReq = async () => {
     const check = SearchSchema.safeParse({ keyword });
@@ -20,21 +36,17 @@ function SearchPaste() {
       return
     }
     setErrMsg('');
-    const { data: freshData, isError: hasError, error: fetchError } = await refetch();
+    await refetch();
 
-    if (hasError) {
-      console.log(fetchError)
-      setErrMsg(fetchError?.message || 'Try again')
-      return
-    }
-    if (freshData && freshData.length > 0)
-      setResult(freshData)
-    else {
-      setResult([]);
-      setErrMsg('Paste Not Found')
-    }
-    console.log(freshData)
+    // const { data: freshData, isError: hasError, error: fetchError } = await refetch();
+    // if (hasError) {
+    //   console.log(fetchError)
+    //   setErrMsg(fetchError?.message || 'Try again')
+    //   return
+    // }
   }
+
+  const allPastes = data?.pages.flat() || [];
 
   return (
     <div>
@@ -72,14 +84,14 @@ function SearchPaste() {
         {
           (errMsg || isError)
           &&
-          <div className='text-center text-red-500 font-medium text-xl '>{errMsg}</div>
+          <div className='text-center text-gray-500 '>{errMsg}</div>
         }
 
         {
-          (result.length > 0) &&
+          (allPastes.length > 0) &&
           <div className='bg-brand-slate  border border-brand-border rounded-sm'>
 
-            {result.map((el, idx) => {
+            {allPastes.map((el) => {
               return (
                 <Link to='/pastes/$slug'
                   params={{ slug: el.slug }}
@@ -94,19 +106,21 @@ function SearchPaste() {
                       Create: {new Date(el.createdAt).toLocaleString()} |
                       Expire: {el.expiresAt ? new Date(el.expiresAt).toLocaleString() : 'Never'}
                     </p>
-
-
                   </div>
                 </Link>
               )
             })}
 
-
+            {/* The Invisible Trigger Div */}
+            <div ref={ref} className="h-10 w-full flex justify-center items-center">
+              {isFetchingNextPage && <span className="text-brand-green animate-pulse">Loading more...</span>}
+            </div>
           </div>
         }
+        {allPastes.length === 0 && !isLoading && !errMsg && data !== undefined && (
+          <div className="text-center text-gray-500">No results found for {keyword}</div>
+        )}
       </div>
-      {/* 
-      <div>{errMsg || (isError ? (error as Error).message : '')}</div> */}
     </div>
   )
 }

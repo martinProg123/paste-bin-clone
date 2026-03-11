@@ -45,6 +45,7 @@ export const pastes = pgTable("pastes", {
   // Mirroring your SQL indexes
   slugIdx: uniqueIndex("idx_pastes_slug").on(table.slug),
   userIdIdx: index("idx_pastes_user_id").on(table.userId),
+  createdAtIdx: index('created_at_idx').on(table.createdAt),
   // Mirroring your SQL CHECK constraint
   visibilityCheck: check("visibility_check", sql`${table.visibility} IN ('public', 'private', 'unlisted')`),
 }));
