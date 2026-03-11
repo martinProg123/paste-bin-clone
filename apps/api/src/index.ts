@@ -1,22 +1,17 @@
 import express from 'express';
 import cors from 'cors';
-// import dotenv from 'dotenv';
-// import path from 'path';
-// import { fileURLToPath } from 'url';
-
-// // ESM-specific __dirname replacement
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
-
-// // Load .env from monorepo root
-// dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+import { db } from './db/index.js';
+import { pastes } from './db/schema.js';
+import { count, eq, sql, ilike, or } from 'drizzle-orm';
+import { nanoid } from 'nanoid';
+import type { CreatePasteInput, Paste } from '@pastebin/shared';
+import { CreatePasteSchema } from '@pastebin/shared';
 
 const app = express();
 
 // 1. Configure CORS options
 const corsOptions = {
-  // Point this to your React (Vite) development server
-  origin: `http://localhost:${process.env.VITE_PORT || '4614'}`, 
+  origin: `http://localhost:${process.env.VITE_PORT || '4613'}`,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true, // Required if you plan to use Cookies/Sessions later
@@ -27,13 +22,97 @@ app.use(cors(corsOptions));
 
 // 3. Built-in body parsers
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// 4. Example Route
-app.get('/hi', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// 4. create new paste
+app.post('/api/createPaste', async (req, res) => {
+  try {
+    const result = CreatePasteSchema.safeParse(req.body);
+    if (!result.success) return res.status(400).json(result.error);
+
+    const { title, content, visibility, expiresAt } = result.data;
+
+    let nanoID = nanoid()
+    const expiryMap = {
+      '3m': sql`now() + interval '3 minutes'`,
+      '1h': sql`now() + interval '1 hour'`,
+      '1d': sql`now() + interval '1 day'`,
+      '1w': sql`now() + interval '7 days'`,
+      '1y': sql`now() + interval '1 year'`,
+      'n': null,
+    };
+
+
+    // pre check use 2 db request instead of 1, 
+    // might have race condition(same slug already insert between check and insert)
+
+    // let result = await db.select().from(pastes).where(
+    //   eq(pastes.slug, nanoID)
+    // );
+    // while (result.length > 0) {
+    //   nanoID = nanoid()
+    //   result = await db.select().from(pastes).where(
+    //     eq(pastes.slug, nanoID)
+    //   );
+    // }
+
+    const [newPaste] = await db.insert(pastes).values({
+      slug: nanoID,
+      title,
+      content,
+      visibility,
+      expiresAt: expiryMap[expiresAt as keyof typeof expiryMap] || null,
+      userId: null
+    }).returning();
+
+    res.status(200).json(newPaste);
+  } catch (error) {
+    console.error('DB Connection Error:', error);
+    res.status(500).json({ status: 'error', message: 'Database unreachable' });
+  }
 });
 
-const PORT = process.env.PORT || 4614;
+//search by keyword in title and content
+app.get('/api/search', async (req, res) => {
+  try {
+    const {keywords} = req.query
+    if (!keywords) {
+      return res.status(400).json({ message: 'Keyword is required' });
+    }
+    const sqlTemplate = sql`%${keywords}%` 
+
+    const searchResult = await db.select().from(pastes).where(
+      or(ilike(pastes.title, sqlTemplate),
+      ilike(pastes.content, sqlTemplate))
+    )
+    
+    res.status(200).json(searchResult);
+  } catch (error) {
+    console.error('DB Connection Error:', error);
+    res.status(500).json({ status: 'error', message: 'Database unreachable' });
+  }
+});
+
+// show content of a paste
+app.get('/api/viewPaste', async (req, res) => {
+  try {
+    const {slug} = req.query
+    if (!slug) {
+      return res.status(404).json({ message: 'Not paste found' });
+    }
+
+    const [pasteObj] = await db.select().from(pastes).where(
+      eq(pastes.slug, slug as string)
+    )
+    
+    res.status(200).json(pasteObj);
+  } catch (error) {
+    console.error('DB Connection Error:', error);
+    res.status(500).json({ status: 'error', message: 'Database unreachable' });
+  }
+});
+
+const PORT = process.env.VITE_API_PORT || '4614';
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

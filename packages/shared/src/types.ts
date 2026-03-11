@@ -1,7 +1,9 @@
 export type Visibility = 'public' | 'private' | 'unlisted';
+// export type CreatePasteInput = Omit<Paste, 'id' | 'createdAt' | 'updatedAt' | 'slug'>;
+
 
 export interface Paste {
-    //   id: number;
+    id: number;
     slug: string;
     title: string;
     content: string;

@@ -1,1 +1,23 @@
 @import "tailwindcss";
+
+@theme {
+    /* Official Supabase Colors */
+    --color-brand-green: #34b27b;
+    /* Jungle Green */
+    --color-brand-green-hover: #3ecf8e;
+    /* Slightly brighter for interactions */
+
+    --color-brand-black: #0c0c0c;
+    /* Deep Background */
+    --color-brand-slate: #1c1c1c;
+    /* Card Background */
+    --color-brand-border: #2e2e2e;
+    /* Subtle UI Borders */
+
+    --color-brand-text-primary: #ededed;
+    --color-brand-text-muted: #a1a1a1;
+
+    /* Typography */
+    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-paste: "Consolas", "Menlo", "Monaco", "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", monospace, serif;
+}

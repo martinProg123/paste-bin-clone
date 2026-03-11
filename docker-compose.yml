@@ -24,7 +24,7 @@ services:
     ports:
       - "${PGADMIN_HOST_PORT}:80"
     depends_on:
-      - db:
+      db:
         condition: service_healthy
 
 volumes:
