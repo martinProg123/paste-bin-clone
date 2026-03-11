@@ -7,11 +7,10 @@ export function useViewPaste(slug: string) {
     return useQuery<Paste>({
         queryKey: ['viewPaste', slug],
         queryFn: async () => {
-            const params = { slug };
-            const queryString = new URLSearchParams(params).toString();
-            // API call logic will go here
+            // const params = { slug };
+            // const queryString = new URLSearchParams(params).toString();
             const response = await fetch(
-                `http://localhost:${import.meta.env.VITE_API_PORT}/api/viewPaste?${queryString}`);
+                `http://localhost:${import.meta.env.VITE_API_PORT}/api/viewPaste/${slug}`);
             if (!response.ok) {
                 if (response.status === 404) throw new Error('Paste not found');
                 throw new Error('Failed to fetch paste');

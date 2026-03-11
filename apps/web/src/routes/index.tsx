@@ -32,6 +32,7 @@ function Home() {
     const check = CreatePasteSchema.safeParse(reqData);
     if (!check.success){
       setErrMsg('Paste Content Cannot be Empty')
+      return
     }
     console.log(title, text, selVis, selExpire)
     mutate(reqData);

@@ -11,3 +11,17 @@ export const CreatePasteSchema = z.object({
 
 // Create a type from the schema for your TypeScript interfaces
 export type CreatePasteInput = z.infer<typeof CreatePasteSchema>;
+
+
+export const ViewPasteSchema = z.object({
+  slug: z.string()
+  .length(21, "Invalid Length")
+  .regex(/^[A-Za-z0-9_-]+$/, "Invalid slug format")
+});
+export type PasteSlug = z.infer<typeof ViewPasteSchema>;
+
+export const SearchSchema = z.object({
+  keyword: z.string()
+  .min(1, "At least 1 character")
+  .max(100, "Keyword is too long"),
+});

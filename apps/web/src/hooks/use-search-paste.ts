@@ -3,7 +3,7 @@ import type { Paste } from '@pastebin/shared';
 
 
 export function useSearchPaste(keyword: string) {
-    return useQuery<Paste>({
+    return useQuery<Paste[]>({
         queryKey: ['searchPaste', keyword],
         queryFn: async () => {
             const params = { keyword };

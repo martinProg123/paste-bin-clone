@@ -2,10 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import { db } from './db/index.js';
 import { pastes } from './db/schema.js';
-import { count, eq, sql, ilike, or } from 'drizzle-orm';
+import { count, eq, sql, ilike, or, gt, not, and, isNull } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import type { CreatePasteInput, Paste } from '@pastebin/shared';
-import { CreatePasteSchema } from '@pastebin/shared';
+import { CreatePasteSchema, ViewPasteSchema } from '@pastebin/shared';
 
 const app = express();
 
@@ -75,17 +75,26 @@ app.post('/api/createPaste', async (req, res) => {
 //search by keyword in title and content
 app.get('/api/search', async (req, res) => {
   try {
-    const {keywords} = req.query
+    const { keywords } = req.query
     if (!keywords) {
       return res.status(400).json({ message: 'Keyword is required' });
     }
-    const sqlTemplate = sql`%${keywords}%` 
+    const sqlTemplate = sql`%${keywords}%`
 
     const searchResult = await db.select().from(pastes).where(
-      or(ilike(pastes.title, sqlTemplate),
-      ilike(pastes.content, sqlTemplate))
+      and(
+        or(
+          ilike(pastes.title, sqlTemplate),
+          ilike(pastes.content, sqlTemplate)
+        ),
+        eq(pastes.visibility, 'public'),
+        or(
+          isNull(pastes.expiresAt),
+          gt(pastes.expiresAt, sql`now()`)
+        )
+      )
     )
-    
+
     res.status(200).json(searchResult);
   } catch (error) {
     console.error('DB Connection Error:', error);
@@ -94,17 +103,27 @@ app.get('/api/search', async (req, res) => {
 });
 
 // show content of a paste
-app.get('/api/viewPaste', async (req, res) => {
+app.get('/api/viewPaste/:slug', async (req, res) => {
   try {
-    const {slug} = req.query
-    if (!slug) {
-      return res.status(404).json({ message: 'Not paste found' });
-    }
+    const result = ViewPasteSchema.safeParse(req.params);
+
+    if (!result.success) 
+      return res.status(400).json({ message: "Invalid paste identifier" });
+    
+    const { slug } = result.data
 
     const [pasteObj] = await db.select().from(pastes).where(
-      eq(pastes.slug, slug as string)
+      and(
+        eq(pastes.slug, slug), // Matches the specific slug
+        or(
+          gt(pastes.expiresAt, sql`now()`), // Still valid
+          isNull(pastes.expiresAt)          // Never expires
+        )
+      )
     )
-    
+
+    if (!pasteObj) return res.status(404).json({ message: "Paste not found" });
+
     res.status(200).json(pasteObj);
   } catch (error) {
     console.error('DB Connection Error:', error);

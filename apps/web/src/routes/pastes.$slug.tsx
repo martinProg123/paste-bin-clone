@@ -1,11 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
+import type {  ErrorComponentProps } from '@tanstack/react-router'
 import { useViewPaste } from '../hooks/use-view-paste';
+import { ViewPasteSchema } from '@pastebin/shared';
 
-export const Route = createFileRoute('/pastes/$slug')({
-  component: RouteComponent,
-})
-
-function RouteComponent() {
+function ViewSlug() {
   const { slug } = Route.useParams();
   const { data: pasteObj, isLoading, isError, error  } = useViewPaste(slug);
 
@@ -25,3 +23,28 @@ function RouteComponent() {
     </div>
   )
 }
+
+const PasteErrorState = ({ error }: ErrorComponentProps)=> {
+  return (
+    <div className="p-8 text-center">
+      <h2 className="text-xl font-bold text-red-600">Oops! Something went wrong.</h2>
+      <p className="mt-2 text-gray-600">{error.message}</p>
+      <a href="/" className="mt-4 inline-block text-blue-500 underline">
+        Go back home
+      </a>
+    </div>
+  );
+}
+
+export const Route = createFileRoute('/pastes/$slug')({
+  component: ViewSlug,
+  errorComponent: PasteErrorState, // Define the UI for errors
+  loader: ({ params }) => {
+    // Basic validation before fetching
+    const check = ViewPasteSchema.safeParse(params);
+    if (!check.success) {
+      throw new Error("Invalid URL format");
+    }
+    return { slug: params.slug };
+  },
+})
