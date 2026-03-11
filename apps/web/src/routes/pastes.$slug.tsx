@@ -52,14 +52,19 @@ function ViewSlug() {
         <h1 className="text-2xl font-bold">{pasteObj.title || 'Untitled Paste'}</h1>
 
         <div className="mt-2 text-sm text-gray-500">
+          ID: {pasteObj.slug}
+        </div>
+        
+        <div className="mt-2 text-sm text-gray-500">
           Visibility: {pasteObj.visibility.toUpperCase()} | Created: {new Date(pasteObj.createdAt).toLocaleString()}
           | Expired: {pasteObj.expiresAt ? new Date(pasteObj.expiresAt).toLocaleString() : 'Never'}
         </div>
+
       </div>
 
       <div className=' border border-brand-border bg-brand-slate rounded p-2 '>
         <div className='flex justify-between mb-3'>
-          <div className='text-sm  px-1 py-3 font-sans'>{pasteSize} kb / 500 kb</div>
+          <div className='text-sm px-2 font-sans my-auto '>{pasteSize} kb / 500 kb</div>
           <div className='flex gap-2 text-brand-green'>
             <button
               onClick={handleCopy}
@@ -68,7 +73,7 @@ function ViewSlug() {
             </button>
 
             <button
-              className=''
+              className='cursor-pointer rounded-md bg-brand-deep px-3 py-1 hover:text-brand-text-muted'
               onClick={handleDownload}
             >
               Download
