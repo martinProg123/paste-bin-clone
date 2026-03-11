@@ -13,6 +13,7 @@
     /* Card Background */
     --color-brand-border: #2e2e2e;
     /* Subtle UI Borders */
+    --color-brand-deep: #222;
 
     --color-brand-text-primary: #ededed;
     --color-brand-text-muted: #a1a1a1;

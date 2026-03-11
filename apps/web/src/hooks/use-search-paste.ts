@@ -18,6 +18,7 @@ export function useSearchPaste(keyword: string) {
 
             return response.json();
         },
+        enabled: false, // Prevents auto-running on mount
         staleTime: 1000 * 60 * 5,
     });
 }

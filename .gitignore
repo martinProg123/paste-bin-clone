@@ -28,3 +28,5 @@ Thumbs.db
 # Database / Docker
 # Keep your docker-compose.yml, but ignore local data volumes
 postgres_data/
+
+.tanstack
