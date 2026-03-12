@@ -6,6 +6,7 @@ import { count, eq, sql, ilike, or, gt, not, and, isNull, desc, lt } from 'drizz
 import { nanoid } from 'nanoid';
 import type { CreatePasteInput, Paste } from '@pastebin/shared';
 import { CreatePasteSchema, SearchSchema, ViewPasteSchema } from '@pastebin/shared';
+import cron from 'node-cron'
 
 const app = express();
 
@@ -23,6 +24,26 @@ app.use(cors(corsOptions));
 // 3. Built-in body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+cron.schedule('* * * * *', async () => {
+  console.log(new Date().toLocaleString()+' [Cron] Checking for expired pastes...');
+  try {
+    const result = await db
+      .delete(pastes)
+      .where(
+        and(
+          not(isNull(pastes.expiresAt)), // Only pastes with an expiry
+          lt(pastes.expiresAt, sql`now()`) // Expiry is in the past
+        )
+      ).returning()
+    
+    if (result.length && result.length > 0) {
+      console.log(`${new Date().toLocaleString()} [Cleanup] Removed ${result.length} expired pastes.`);
+    }
+  } catch (error) {
+    console.error(new Date().toLocaleString() + '[Cron] Error during cleanup:', error);
+  }
+});
 
 // 4. create new paste
 app.post('/api/createPaste', async (req, res) => {
