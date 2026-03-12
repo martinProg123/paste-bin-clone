@@ -23,7 +23,7 @@ export function useSearchPaste(keyword: string) {
             if (!lastPage || lastPage.length < 10) return undefined
             return lastPage[lastPage.length - 1].createdAt
         },
-        enabled: false, // Prevents auto-running on mount
+        enabled: !!keyword.trim(), // Prevents auto-running on mount
         staleTime: 1000 * 60 * 5,
     });
 }

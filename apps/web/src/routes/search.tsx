@@ -9,8 +9,9 @@ export const Route = createFileRoute('/search')({
 })
 
 function SearchPaste() {
-  const [keyword, setKeyword] = useState<string>('')
+  const [searchInput, setSearchInput] = useState<string>('')
   const [errMsg, setErrMsg] = useState<string>('')
+  const [keyword, setKeyword] = useState<string>('');
   const { data,
     isLoading,
     isError,
@@ -30,13 +31,15 @@ function SearchPaste() {
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const searchReq = async () => {
-    const check = SearchSchema.safeParse({ keyword });
+    setErrMsg('');
+    const check = SearchSchema.safeParse({ keyword: searchInput });
     if (!check.success) {
       setErrMsg(check.error.errors[0].message)
+      setKeyword('')
       return
     }
-    setErrMsg('');
-    await refetch();
+    setKeyword(searchInput);
+    // await refetch();
 
     // const { data: freshData, isError: hasError, error: fetchError } = await refetch();
     // if (hasError) {
@@ -61,7 +64,7 @@ function SearchPaste() {
               }
             }}
             onChange={(ev) => {
-              setKeyword(ev.target.value)
+              setSearchInput(ev.target.value)
             }}
           />
         </div>
@@ -118,7 +121,7 @@ function SearchPaste() {
           </div>
         }
         {allPastes.length === 0 && !isLoading && !errMsg && data !== undefined && (
-          <div className="text-center text-gray-500">No results found for {keyword}</div>
+          <div className="text-center text-gray-500">No results found for {searchInput}</div>
         )}
       </div>
     </div>
