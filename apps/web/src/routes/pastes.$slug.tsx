@@ -45,8 +45,10 @@ function ViewSlug() {
 
   const showModal = showPasswordModal && !pasteObj?.content;
   const isInitialLoading = isLoading;
+  // disable button and change button text when submit password
   const isRetrying = isFetching && hasAttemptedAuth;
   const needsPassword = pasteObj && pasteObj.content === null;
+  // for invalid pw msg
   const wrongPassword = pasteObj && pasteObj.passwordError === true;
 
   if (isInitialLoading) {

@@ -14,7 +14,8 @@ export function useViewPaste(slug: string, password?: string, enabled: boolean =
                 `http://localhost:${import.meta.env.VITE_API_PORT}/api/viewPaste/${slug}${queryString ? '?' + queryString : ''}`);
             if (!response.ok) {
                 if (response.status === 404) throw new Error('Paste not found');
-                throw new Error('Failed to fetch paste');
+                const error = await response.json().catch(() => ({ message: 'Failed to fetch paste' }));
+                throw new Error(error.message || 'Failed to fetch paste');
             }
 
             return response.json();

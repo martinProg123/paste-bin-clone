@@ -95,7 +95,22 @@ app.post('/api/createPaste', async (req, res) => {
       userId: null
     }).returning();
 
-    res.status(200).json(newPaste);
+    if (!newPaste) {
+      return res.status(500).json({ status: 'error', message: 'Failed to create paste' });
+    }
+
+    const response = {
+      id: newPaste.id,
+      slug: newPaste.slug,
+      title: newPaste.title,
+      content: newPaste.content,
+      visibility: newPaste.visibility,
+      createdAt: newPaste.createdAt,
+      updatedAt: newPaste.updatedAt,
+      expiresAt: newPaste.expiresAt,
+    };
+
+    res.status(200).json(response);
   } catch (error) {
     console.error('DB Connection Error:', error);
     res.status(500).json({ status: 'error', message: 'Database unreachable' });

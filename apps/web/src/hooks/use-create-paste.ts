@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Paste, Visibility, CreatePasteInput } from '@pastebin/shared';
+import type { Paste, CreatePasteInput } from '@pastebin/shared';
 import { useNavigate } from '@tanstack/react-router'
 
 // type CreatePasteInput = Omit<Paste, 'id' | 'createdAt' | 'updatedAt' | 'slug'>;
@@ -10,17 +10,19 @@ export function useCreatePaste() {
 
     return useMutation({
         mutationFn: async (newPaste: CreatePasteInput): Promise<Paste> => {
-            // API call logic will go here
             const response = await fetch(`http://localhost:${import.meta.env.VITE_API_PORT}/api/createPaste`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newPaste),
             });
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ message: 'Failed to create paste' }));
+                throw new Error(error.message || 'Failed to create paste');
+            }
             return response.json();
         },
         onSuccess: (data, variables) => {
-            // Invalidate existing queries to refresh lists if necessary
-            queryClient.invalidateQueries({ queryKey: ['createPaste'] });
+            queryClient.invalidateQueries({ queryKey: ['searchPaste'] });
             console.log('Paste created with slug:', data.slug);
 
             // For private pastes, store password in sessionStorage to allow immediate viewing

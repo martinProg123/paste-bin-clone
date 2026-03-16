@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import type { Paste } from '@pastebin/shared';
 
 
@@ -12,7 +12,10 @@ export function useSearchPaste(keyword: string) {
 
             const response = await fetch(url.toString());
             if (!response.ok) {
-                if (response.status === 400) throw new Error('Keyword is required');
+                if (response.status === 400) {
+                    const error = await response.json().catch(() => ({ message: 'Keyword is required' }));
+                    throw new Error(error.message || 'Keyword is required');
+                }
                 throw new Error('Failed to fetch paste');
             }
 
