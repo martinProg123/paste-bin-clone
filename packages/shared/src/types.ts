@@ -8,7 +8,6 @@ export interface Paste {
     title: string;
     content: string | null;
     visibility: Visibility;
-    passwordHash: string | null;
     passwordError?: boolean;
     createdAt: string;
     updatedAt: string;

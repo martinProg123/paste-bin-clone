@@ -18,14 +18,14 @@ export function useCreatePaste() {
             });
             return response.json();
         },
-        onSuccess: (data) => {
+        onSuccess: (data, variables) => {
             // Invalidate existing queries to refresh lists if necessary
             queryClient.invalidateQueries({ queryKey: ['createPaste'] });
             console.log('Paste created with slug:', data.slug);
 
-            // For private pastes, store a flag in sessionStorage to allow immediate viewing
-            if (data.visibility === 'private' && data.passwordHash) {
-                sessionStorage.setItem(`paste_auth_${data.slug}`, 'true');
+            // For private pastes, store password in sessionStorage to allow immediate viewing
+            if (data.visibility === 'private' && variables.password) {
+                sessionStorage.setItem(`paste_auth_${data.slug}`, variables.password);
             }
 
             // Manually seed the cache for the individual paste query

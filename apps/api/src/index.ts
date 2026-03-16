@@ -150,7 +150,17 @@ app.get('/api/viewPaste/:slug', async (req, res) => {
     const { slug } = result.data
     const { password } = req.query as { password?: string };
 
-    const [pasteObj] = await db.select().from(pastes).where(
+    const [pasteObj] = await db.select({
+      id: pastes.id,
+      slug: pastes.slug,
+      title: pastes.title,
+      content: pastes.content,
+      visibility: pastes.visibility,
+      passwordHash: pastes.passwordHash,
+      createdAt: pastes.createdAt,
+      updatedAt: pastes.updatedAt,
+      expiresAt: pastes.expiresAt,
+    }).from(pastes).where(
       and(
         eq(pastes.slug, slug), 
         or(
@@ -162,20 +172,32 @@ app.get('/api/viewPaste/:slug', async (req, res) => {
 
     if (!pasteObj) return res.status(404).json({ message: "Paste not found" });
 
+    const response: Record<string, unknown> = {
+      id: pasteObj.id,
+      slug: pasteObj.slug,
+      title: pasteObj.title,
+      visibility: pasteObj.visibility,
+      createdAt: pasteObj.createdAt,
+      updatedAt: pasteObj.updatedAt,
+      expiresAt: pasteObj.expiresAt,
+    };
+
     if (pasteObj.visibility === 'private' && pasteObj.passwordHash) {
       if (!password) {
-        const { content, ...pasteWithoutContent } = pasteObj;
-        return res.status(200).json({ ...pasteWithoutContent, content: null });
+        response.content = null;
+        return res.status(200).json(response);
       }
       const [salt, hash] = pasteObj.passwordHash.split(':');
       const inputHash = createHash('sha256').update(salt + password).digest('hex');
       if (inputHash !== hash) {
-        const { content, ...pasteWithoutContent } = pasteObj;
-        return res.status(200).json({ ...pasteWithoutContent, content: null, passwordError: true });
+        response.content = null;
+        response.passwordError = true;
+        return res.status(200).json(response);
       }
     }
 
-    res.status(200).json(pasteObj);
+    response.content = pasteObj.content;
+    res.status(200).json(response);
   } catch (error) {
     console.error('DB Connection Error:', error);
     res.status(500).json({ status: 'error', message: 'Database unreachable' });

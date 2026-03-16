@@ -9,7 +9,6 @@ function ViewSlug() {
   const [password, setPassword] = useState('');
   const [submittedPassword, setSubmittedPassword] = useState('');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [passwordError, setPasswordError] = useState('');
   const [hasAttemptedAuth, setHasAttemptedAuth] = useState(false);
   
   const { data: pasteObj, isLoading, isFetching, refetch } = useViewPaste(
@@ -20,31 +19,31 @@ function ViewSlug() {
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    const savedPassword = sessionStorage.getItem(`paste_auth_${slug}`);
+    if (savedPassword) {
+      setSubmittedPassword(savedPassword);
+      sessionStorage.removeItem(`paste_auth_${slug}`);
+    }
+  }, [slug]);
+
+  useEffect(() => {
+    if (pasteObj && pasteObj.content === null && !submittedPassword) {
+      setShowPasswordModal(true);
+    }
+  }, [pasteObj, submittedPassword]);
+
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!password) {
-      setPasswordError('Please enter a password');
       return;
     }
-    setPasswordError('');
     setSubmittedPassword(password);
     setHasAttemptedAuth(true);
     refetch();
   };
 
-  useEffect(() => {
-    const hasAuth = sessionStorage.getItem(`paste_auth_${slug}`);
-    if (hasAuth) {
-      sessionStorage.removeItem(`paste_auth_${slug}`);
-      return;
-    }
-
-    if (pasteObj && pasteObj.content === null) {
-      setShowPasswordModal(true);
-    }
-  }, [pasteObj, slug]);
-
-  const showModal = showPasswordModal;
+  const showModal = showPasswordModal && !pasteObj?.content;
   const isInitialLoading = isLoading;
   const isRetrying = isFetching && hasAttemptedAuth;
   const needsPassword = pasteObj && pasteObj.content === null;
@@ -76,7 +75,6 @@ function ViewSlug() {
               autoFocus
               disabled={isRetrying}
             />
-            {passwordError && <p className="text-red-500 mb-4">{passwordError}</p>}
             {wrongPassword && (
               <p className="text-red-500 mb-4">Invalid password</p>
             )}
