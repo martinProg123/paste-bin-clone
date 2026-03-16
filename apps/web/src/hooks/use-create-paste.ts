@@ -23,6 +23,11 @@ export function useCreatePaste() {
             queryClient.invalidateQueries({ queryKey: ['createPaste'] });
             console.log('Paste created with slug:', data.slug);
 
+            // For private pastes, store a flag in sessionStorage to allow immediate viewing
+            if (data.visibility === 'private' && data.passwordHash) {
+                sessionStorage.setItem(`paste_auth_${data.slug}`, 'true');
+            }
+
             // Manually seed the cache for the individual paste query
             queryClient.setQueryData(['viewPaste', data.slug], data);
             // Redirect using only the slug

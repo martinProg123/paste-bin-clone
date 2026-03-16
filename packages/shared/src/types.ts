@@ -6,9 +6,10 @@ export interface Paste {
     id: number;
     slug: string;
     title: string;
-    content: string;
+    content: string | null;
     visibility: Visibility;
     passwordHash: string | null;
+    passwordError?: boolean;
     createdAt: string;
     updatedAt: string;
     expiresAt: string | null;

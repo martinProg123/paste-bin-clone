@@ -14,11 +14,6 @@ export function useViewPaste(slug: string, password?: string, enabled: boolean =
                 `http://localhost:${import.meta.env.VITE_API_PORT}/api/viewPaste/${slug}${queryString ? '?' + queryString : ''}`);
             if (!response.ok) {
                 if (response.status === 404) throw new Error('Paste not found');
-                if (response.status === 401) {
-                    const data = await response.json();
-                    throw new Error(data.message || 'Password required');
-                }
-                if (response.status === 403) throw new Error('Invalid password');
                 throw new Error('Failed to fetch paste');
             }
 

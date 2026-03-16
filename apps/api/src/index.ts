@@ -164,12 +164,14 @@ app.get('/api/viewPaste/:slug', async (req, res) => {
 
     if (pasteObj.visibility === 'private' && pasteObj.passwordHash) {
       if (!password) {
-        return res.status(401).json({ message: "Password required", requiresPassword: true });
+        const { content, ...pasteWithoutContent } = pasteObj;
+        return res.status(200).json({ ...pasteWithoutContent, content: null });
       }
       const [salt, hash] = pasteObj.passwordHash.split(':');
       const inputHash = createHash('sha256').update(salt + password).digest('hex');
       if (inputHash !== hash) {
-        return res.status(403).json({ message: "Invalid password" });
+        const { content, ...pasteWithoutContent } = pasteObj;
+        return res.status(200).json({ ...pasteWithoutContent, content: null, passwordError: true });
       }
     }
 
