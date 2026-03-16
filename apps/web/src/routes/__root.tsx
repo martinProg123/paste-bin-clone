@@ -1,5 +1,5 @@
 import { createRootRoute, Link, Outlet } from '@tanstack/react-router';
-import { TanStackRouterDevtools } from '@tanstack/router-devtools';
+// import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 
 const rootComponent = () => {
   return (
@@ -13,7 +13,7 @@ const rootComponent = () => {
       <main className="p-4">
         <Outlet /> {/* This is where your sub-pages render */}
       </main>
-      <TanStackRouterDevtools />
+      {/* <TanStackRouterDevtools /> */}
     </div>
   )
 }
