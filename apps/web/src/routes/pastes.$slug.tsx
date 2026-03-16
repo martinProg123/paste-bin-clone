@@ -7,9 +7,10 @@ import { useEffect, useRef, useState } from 'react';
 function ViewSlug() {
   const { slug } = Route.useParams();
   const [password, setPassword] = useState('');
+  const [submittedPassword, setSubmittedPassword] = useState('');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordError, setPasswordError] = useState('');
-  const { data: pasteObj, isLoading, isError, error, refetch } = useViewPaste(slug, password || undefined);
+  const { data: pasteObj, isLoading, isError, error, refetch } = useViewPaste(slug, submittedPassword || undefined);
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -20,6 +21,7 @@ function ViewSlug() {
       return;
     }
     setPasswordError('');
+    setSubmittedPassword(password);
     refetch();
   };
 
@@ -34,7 +36,16 @@ function ViewSlug() {
 
   const showModal = showPasswordModal && (isError || !pasteObj);
 
-  if (isLoading) return <span>Loading...</span>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-brand-green border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-gray-400">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">

@@ -2,10 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import type { Paste } from '@pastebin/shared';
 
 
-export function useViewPaste(slug: string, password?: string) {
+export function useViewPaste(slug: string, password?: string, enabled: boolean = true) {
 
     return useQuery<Paste>({
-        queryKey: ['viewPaste', slug, password],
+        queryKey: ['viewPaste', slug],
         queryFn: async () => {
             const params = new URLSearchParams();
             if (password) params.set('password', password);
@@ -24,6 +24,7 @@ export function useViewPaste(slug: string, password?: string) {
 
             return response.json();
         },
+        enabled,
         staleTime: 1000 * 60 * 5,
     });
 }
