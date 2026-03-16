@@ -15,7 +15,7 @@ function ViewSlug() {
   const { data: pasteObj, isLoading, isFetching, isError, error, refetch } = useViewPaste(
     slug, 
     submittedPassword || undefined,
-    hasAttemptedAuth
+    true
   );
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -33,13 +33,21 @@ function ViewSlug() {
   };
 
   useEffect(() => {
-    if (isError) {
+    if (isError && error) {
       const errorMessage = error.message;
       if (errorMessage === 'Password required' || errorMessage === 'Invalid password') {
         setShowPasswordModal(true);
       }
     }
   }, [isError, error]);
+
+  useEffect(() => {
+    if (pasteObj && pasteObj.visibility === 'private' && pasteObj.passwordHash) {
+      if (!submittedPassword) {
+        setShowPasswordModal(true);
+      }
+    }
+  }, [pasteObj, submittedPassword]);
 
   const showModal = showPasswordModal && (isError || !pasteObj);
   const isInitialLoading = isLoading && !hasAttemptedAuth;
