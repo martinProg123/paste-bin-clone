@@ -150,17 +150,7 @@ app.get('/api/viewPaste/:slug', async (req, res) => {
     const { slug } = result.data
     const { password } = req.query as { password?: string };
 
-    const [pasteObj] = await db.select({
-      id: pastes.id,
-      slug: pastes.slug,
-      title: pastes.title,
-      content: pastes.content,
-      visibility: pastes.visibility,
-      passwordHash: pastes.passwordHash,
-      createdAt: pastes.createdAt,
-      updatedAt: pastes.updatedAt,
-      expiresAt: pastes.expiresAt,
-    }).from(pastes).where(
+    const [pasteObj] = await db.select().from(pastes).where(
       and(
         eq(pastes.slug, slug), 
         or(

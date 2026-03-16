@@ -83,14 +83,18 @@ function Home() {
               value={password}
               onChange={(ev) => setPassword(ev.target.value)}
               className='p-2 bg-brand-slate border border-brand-border rounded md:w-48 w-full'
-              placeholder="Enter password (min 4 chars)"
+              placeholder="Min 4 chars"
               minLength={4}
             />
           </div>
         )}
 
+      </div>
+
+      <div className='text-brand-text-primary font-medium flex gap-6 md:flex-row flex-col'>
+
         <div className='flex md:flex-row flex-col'>
-          <label htmlFor="expire-select" className='md:w-48 w-full p-2'>Expire:</label>
+          <label htmlFor="expire-select" className='md:w-32 w-full p-2'>Expire:</label>
           <select name="expire-select" id="expire-select"
             className='p-2 bg-brand-slate  border border-brand-border rounded md:w-48 w-full' 
           
