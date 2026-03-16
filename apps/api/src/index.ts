@@ -5,8 +5,9 @@ import { pastes } from './db/schema.js';
 import { count, eq, sql, ilike, or, gt, not, and, isNull, desc, lt } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import type { CreatePasteInput, Paste } from '@pastebin/shared';
-import { CreatePasteSchema, SearchSchema, ViewPasteSchema } from '@pastebin/shared';
+import { CreatePasteSchema, SearchSchema, ViewPasteSchema, ViewPasteWithPasswordSchema } from '@pastebin/shared';
 import cron from 'node-cron'
+import { randomBytes, createHash } from 'crypto';
 
 const app = express();
 
@@ -51,7 +52,14 @@ app.post('/api/createPaste', async (req, res) => {
     const result = CreatePasteSchema.safeParse(req.body);
     if (!result.success) return res.status(400).json(result.error);
 
-    const { title, content, visibility, expiresAt } = result.data;
+    const { title, content, visibility, expiresAt, password } = result.data;
+
+    let passwordHash: string | null = null;
+    if (visibility === 'private' && password) {
+      const salt = randomBytes(16).toString('hex');
+      const hash = createHash('sha256').update(salt + password).digest('hex');
+      passwordHash = `${salt}:${hash}`;
+    }
 
     let nanoID = nanoid()
     const expiryMap = {
@@ -82,6 +90,7 @@ app.post('/api/createPaste', async (req, res) => {
       title,
       content,
       visibility,
+      passwordHash,
       expiresAt: expiryMap[expiresAt as keyof typeof expiryMap] || null,
       userId: null
     }).returning();
@@ -139,6 +148,7 @@ app.get('/api/viewPaste/:slug', async (req, res) => {
       return res.status(400).json({ message: "Invalid paste identifier" });
 
     const { slug } = result.data
+    const { password } = req.query as { password?: string };
 
     const [pasteObj] = await db.select().from(pastes).where(
       and(
@@ -151,6 +161,17 @@ app.get('/api/viewPaste/:slug', async (req, res) => {
     )
 
     if (!pasteObj) return res.status(404).json({ message: "Paste not found" });
+
+    if (pasteObj.visibility === 'private' && pasteObj.passwordHash) {
+      if (!password) {
+        return res.status(401).json({ message: "Password required", requiresPassword: true });
+      }
+      const [salt, hash] = pasteObj.passwordHash.split(':');
+      const inputHash = createHash('sha256').update(salt + password).digest('hex');
+      if (inputHash !== hash) {
+        return res.status(403).json({ message: "Invalid password" });
+      }
+    }
 
     res.status(200).json(pasteObj);
   } catch (error) {

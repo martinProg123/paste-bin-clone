@@ -1,24 +1,29 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { Paste, Visibility } from '@pastebin/shared';
+import { useQuery } from '@tanstack/react-query';
+import type { Paste } from '@pastebin/shared';
 
 
-export function useViewPaste(slug: string) {
+export function useViewPaste(slug: string, password?: string) {
 
     return useQuery<Paste>({
-        queryKey: ['viewPaste', slug],
+        queryKey: ['viewPaste', slug, password],
         queryFn: async () => {
-            // const params = { slug };
-            // const queryString = new URLSearchParams(params).toString();
+            const params = new URLSearchParams();
+            if (password) params.set('password', password);
+            const queryString = params.toString();
             const response = await fetch(
-                `http://localhost:${import.meta.env.VITE_API_PORT}/api/viewPaste/${slug}`);
+                `http://localhost:${import.meta.env.VITE_API_PORT}/api/viewPaste/${slug}${queryString ? '?' + queryString : ''}`);
             if (!response.ok) {
                 if (response.status === 404) throw new Error('Paste not found');
+                if (response.status === 401) {
+                    const data = await response.json();
+                    throw new Error(data.message || 'Password required');
+                }
+                if (response.status === 403) throw new Error('Invalid password');
                 throw new Error('Failed to fetch paste');
             }
 
             return response.json();
         },
-        // Optional: staleTime ensures it doesn't refetch immediately if data exists
         staleTime: 1000 * 60 * 5,
     });
 }

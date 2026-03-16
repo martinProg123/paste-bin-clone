@@ -7,6 +7,7 @@ export const CreatePasteSchema = z.object({
     .max(500000, "Content must be under 500kb"),
   visibility: z.enum(['public', 'private', 'unlisted']),
   expiresAt: z.string().optional(),
+  password: z.string().min(4, "Password must be at least 4 characters").optional(),
 });
 
 // Create a type from the schema for your TypeScript interfaces
@@ -19,6 +20,13 @@ export const ViewPasteSchema = z.object({
   .regex(/^[A-Za-z0-9_-]+$/, "Invalid slug format")
 });
 export type PasteSlug = z.infer<typeof ViewPasteSchema>;
+
+export const ViewPasteWithPasswordSchema = z.object({
+  slug: z.string()
+    .length(21, "Invalid Length")
+    .regex(/^[A-Za-z0-9_-]+$/, "Invalid slug format"),
+  password: z.string().min(1, "Password is required"),
+});
 
 export const SearchSchema = z.object({
   keyword: z.string()

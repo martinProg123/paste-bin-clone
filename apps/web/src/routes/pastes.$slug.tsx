@@ -6,13 +6,35 @@ import { useRef, useState } from 'react';
 
 function ViewSlug() {
   const { slug } = Route.useParams();
-  const { data: pasteObj, isLoading, isError, error } = useViewPaste(slug);
+  const [password, setPassword] = useState('');
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const { data: pasteObj, isLoading, isError, error, refetch } = useViewPaste(slug, password || undefined);
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    refetch();
+  };
+
+  if (isError) {
+    const errorMessage = error.message;
+    if (errorMessage === 'Password required' || errorMessage === 'Invalid password') {
+      setShowPasswordModal(true);
+    }
+  }
+
   if (isLoading) return <span>Loading...</span>;
-  if (isError) return <span>Error: {error.message}</span>;
   if (!pasteObj) return null;
+
+  const requiresPassword = pasteObj.visibility === 'private' && pasteObj.passwordHash && !password;
+
+  if (requiresPassword && showPasswordModal === false) {
+    setShowPasswordModal(true);
+  }
+
   const pasteSize = (new TextEncoder().encode(pasteObj.content).length / 1024).toFixed(2);
 
   const handleCopy = async () => {
@@ -48,6 +70,29 @@ function ViewSlug() {
 
   return (
     <div className="flex flex-col gap-6">
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <form onSubmit={handlePasswordSubmit} className="bg-brand-slate p-6 rounded-lg shadow-xl border border-brand-border">
+            <h3 className="text-lg font-bold mb-4">Password Required</h3>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-2 mb-4 bg-brand-deep border border-brand-border rounded"
+              placeholder="Enter password"
+              autoFocus
+            />
+            {passwordError && <p className="text-red-500 mb-4">{passwordError}</p>}
+            <button
+              type="submit"
+              className="w-full bg-brand-green hover:bg-brand-green-hover text-white px-4 py-2 rounded"
+            >
+              Submit
+            </button>
+          </form>
+        </div>
+      )}
+
       <div>
         <h1 className="text-2xl font-bold">{pasteObj.title || 'Untitled Paste'}</h1>
 

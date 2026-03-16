@@ -8,9 +8,15 @@ export interface Paste {
     title: string;
     content: string;
     visibility: Visibility;
+    passwordHash: string | null;
     createdAt: string;
     updatedAt: string;
-    expiresAt: string | null; // Dates are often strings in JSON transit
+    expiresAt: string | null;
+}
+
+export interface PasteError {
+    message: string;
+    requiresPassword?: boolean;
 }
 
 export interface User {

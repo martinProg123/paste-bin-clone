@@ -10,7 +10,7 @@ export const Route = createFileRoute('/')({
 
 function Home() {
   const visibilityArr = ['public'
-    // , 'private' 
+    , 'private' 
     , 'unlisted']
   const expireArr = ['3m', '1h', '1d', '1w', '1y', 'n']
   const expireTextArr = ['3 Min', '1 Hour', '1 Day', '1 Week', '1 Year', 'Never']
@@ -21,6 +21,7 @@ function Home() {
   const [errMsg, setErrMsg] = useState<string>('')
   const [selVis, setSelVis] = useState<string>(visibilityArr[0]);
   const [selExpire, setSelExpire] = useState<string>(expireArr[0]);
+  const [password, setPassword] = useState<string>('');
 
   const createPaste = async () => {
     const reqData = {
@@ -28,6 +29,7 @@ function Home() {
       content: text,
       visibility: selVis as Visibility,
       expiresAt: selExpire,
+      ...(selVis === 'private' && password ? { password } : {}),
     }
     const check = CreatePasteSchema.safeParse(reqData);
     if (!check.success){
@@ -88,6 +90,21 @@ function Home() {
           </select>
         </div>
       </div>
+
+      {selVis === 'private' && (
+        <div className='flex md:flex-row flex-col'>
+          <label htmlFor="password" className='md:w-48 w-full p-2'>Password:</label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(ev) => setPassword(ev.target.value)}
+            className='p-2 bg-brand-slate border border-brand-border rounded md:w-48 w-full'
+            placeholder="Enter password (min 4 chars)"
+            minLength={4}
+          />
+        </div>
+      )}
 
       <div className='flex justify-end'>
         <button

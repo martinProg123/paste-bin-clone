@@ -33,6 +33,7 @@ export const pastes = pgTable("pastes", {
   content: text("content").notNull(),
   
   visibility: text("visibility").default("public").$type<'public' | 'private' | 'unlisted'>(),
+  passwordHash: varchar("password_hash", { length: 128 }),
   
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
