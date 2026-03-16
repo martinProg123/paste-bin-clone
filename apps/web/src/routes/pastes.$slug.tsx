@@ -10,7 +10,13 @@ function ViewSlug() {
   const [submittedPassword, setSubmittedPassword] = useState('');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordError, setPasswordError] = useState('');
-  const { data: pasteObj, isLoading, isError, error, refetch } = useViewPaste(slug, submittedPassword || undefined);
+  const [hasAttemptedAuth, setHasAttemptedAuth] = useState(false);
+  
+  const { data: pasteObj, isLoading, isFetching, isError, error, refetch } = useViewPaste(
+    slug, 
+    submittedPassword || undefined,
+    hasAttemptedAuth
+  );
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -22,6 +28,7 @@ function ViewSlug() {
     }
     setPasswordError('');
     setSubmittedPassword(password);
+    setHasAttemptedAuth(true);
     refetch();
   };
 
@@ -35,8 +42,10 @@ function ViewSlug() {
   }, [isError, error]);
 
   const showModal = showPasswordModal && (isError || !pasteObj);
+  const isInitialLoading = isLoading && !hasAttemptedAuth;
+  const isRetrying = isFetching && hasAttemptedAuth;
 
-  if (isLoading) {
+  if (isInitialLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-4">
@@ -60,16 +69,18 @@ function ViewSlug() {
               className="w-full p-2 mb-4 bg-brand-deep border border-brand-border rounded"
               placeholder="Enter password"
               autoFocus
+              disabled={isRetrying}
             />
             {passwordError && <p className="text-red-500 mb-4">{passwordError}</p>}
-            {isError && error.message !== 'Password required' && (
+            {isError && hasAttemptedAuth && (
               <p className="text-red-500 mb-4">{error.message}</p>
             )}
             <button
               type="submit"
-              className="w-full bg-brand-green hover:bg-brand-green-hover text-white px-4 py-2 rounded"
+              className="w-full bg-brand-green hover:bg-brand-green-hover text-white px-4 py-2 rounded disabled:opacity-50"
+              disabled={isRetrying}
             >
-              Submit
+              {isRetrying ? 'Verifying...' : 'Submit'}
             </button>
           </form>
         </div>
@@ -81,7 +92,7 @@ function ViewSlug() {
         </div>
       )}
 
-      {!pasteObj && !showModal && !isLoading && !isError && (
+      {!pasteObj && !showModal && !isInitialLoading && !isError && (
         <div className="p-4 text-gray-400">Paste not found</div>
       )}
 

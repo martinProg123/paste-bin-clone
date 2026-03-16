@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@layer base {
+  body {
+    @apply bg-brand-black text-brand-text-primary;
+  }
+}
+
 @theme {
     /* Official Supabase Colors */
     --color-brand-green: #34b27b;
