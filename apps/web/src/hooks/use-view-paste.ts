@@ -5,7 +5,7 @@ import type { Paste } from '@pastebin/shared';
 export function useViewPaste(slug: string, password?: string, enabled: boolean = true) {
 
     return useQuery<Paste>({
-        queryKey: ['viewPaste', slug, !!password],
+        queryKey: ['viewPaste', slug, password],
         queryFn: async () => {
             const params = new URLSearchParams();
             if (password) params.set('password', password);

@@ -11,7 +11,7 @@ function ViewSlug() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [hasAttemptedAuth, setHasAttemptedAuth] = useState(false);
   
-  const { data: pasteObj, isLoading, isFetching, refetch } = useViewPaste(
+  const { data: pasteObj, isLoading, isFetching } = useViewPaste(
     slug, 
     submittedPassword || undefined,
     true
@@ -40,7 +40,7 @@ function ViewSlug() {
     }
     setSubmittedPassword(password);
     setHasAttemptedAuth(true);
-    refetch();
+    setPassword('');
   };
 
   const showModal = showPasswordModal && !pasteObj?.content;
