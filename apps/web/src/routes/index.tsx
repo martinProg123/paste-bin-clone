@@ -29,13 +29,15 @@ function Home() {
       content: text,
       visibility: selVis as Visibility,
       expiresAt: selExpire,
-      ...(selVis === 'private' && password ? { password } : {}),
+      ...(selVis === 'private' ? { password } : {}),
     }
     const check = CreatePasteSchema.safeParse(reqData);
     if (!check.success){
-      setErrMsg('Paste Content Cannot be Empty')
+      const firstError = check.error.issues[0];
+      setErrMsg(firstError?.message || 'Invalid input')
       return
     }
+    setErrMsg('')
     console.log(title, text, selVis, selExpire)
     mutate(reqData);
   }
@@ -72,9 +74,24 @@ function Home() {
           </select>
         </div>
 
+        {selVis === 'private' && (
+          <div className='flex md:flex-row flex-col'>
+            <label htmlFor="password" className='md:w-48 w-full p-2'>Password:</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(ev) => setPassword(ev.target.value)}
+              className='p-2 bg-brand-slate border border-brand-border rounded md:w-48 w-full'
+              placeholder="Enter password (min 4 chars)"
+              minLength={4}
+            />
+          </div>
+        )}
+
         <div className='flex md:flex-row flex-col'>
-          <label htmlFor="" className='md:w-48 w-full p-2'>Expire:</label>
-          <select name="" id=""
+          <label htmlFor="expire-select" className='md:w-48 w-full p-2'>Expire:</label>
+          <select name="expire-select" id="expire-select"
             className='p-2 bg-brand-slate  border border-brand-border rounded md:w-48 w-full' 
           
             value={selExpire}
@@ -90,21 +107,6 @@ function Home() {
           </select>
         </div>
       </div>
-
-      {selVis === 'private' && (
-        <div className='flex md:flex-row flex-col'>
-          <label htmlFor="password" className='md:w-48 w-full p-2'>Password:</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(ev) => setPassword(ev.target.value)}
-            className='p-2 bg-brand-slate border border-brand-border rounded md:w-48 w-full'
-            placeholder="Enter password (min 4 chars)"
-            minLength={4}
-          />
-        </div>
-      )}
 
       <div className='flex justify-end'>
         <button

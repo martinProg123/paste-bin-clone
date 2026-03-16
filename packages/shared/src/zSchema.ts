@@ -8,6 +8,14 @@ export const CreatePasteSchema = z.object({
   visibility: z.enum(['public', 'private', 'unlisted']),
   expiresAt: z.string().optional(),
   password: z.string().min(4, "Password must be at least 4 characters").optional(),
+}).superRefine((data, ctx) => {
+  if (data.visibility === 'private' && (!data.password || data.password.length < 4)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Password is required for private pastes (min 4 characters)",
+      path: ["password"],
+    });
+  }
 });
 
 // Create a type from the schema for your TypeScript interfaces
@@ -25,7 +33,7 @@ export const ViewPasteWithPasswordSchema = z.object({
   slug: z.string()
     .length(21, "Invalid Length")
     .regex(/^[A-Za-z0-9_-]+$/, "Invalid slug format"),
-  password: z.string().min(1, "Password is required"),
+  password: z.string().min(4, "Password must be at least 4 characters"),
 });
 
 export const SearchSchema = z.object({

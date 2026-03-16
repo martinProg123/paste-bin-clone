@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import type { ErrorComponentProps } from '@tanstack/react-router'
 import { useViewPaste } from '../hooks/use-view-paste';
 import { ViewPasteSchema } from '@pastebin/shared';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 function ViewSlug() {
   const { slug } = Route.useParams();
@@ -19,21 +19,23 @@ function ViewSlug() {
     refetch();
   };
 
-  if (isError) {
-    const errorMessage = error.message;
-    if (errorMessage === 'Password required' || errorMessage === 'Invalid password') {
+  useEffect(() => {
+    if (isError) {
+      const errorMessage = error.message;
+      if (errorMessage === 'Password required' || errorMessage === 'Invalid password') {
+        setShowPasswordModal(true);
+      }
+    }
+  }, [isError, error]);
+
+  useEffect(() => {
+    if (pasteObj && pasteObj.visibility === 'private' && pasteObj.passwordHash && !password) {
       setShowPasswordModal(true);
     }
-  }
+  }, [pasteObj, password]);
 
   if (isLoading) return <span>Loading...</span>;
   if (!pasteObj) return null;
-
-  const requiresPassword = pasteObj.visibility === 'private' && pasteObj.passwordHash && !password;
-
-  if (requiresPassword && showPasswordModal === false) {
-    setShowPasswordModal(true);
-  }
 
   const pasteSize = (new TextEncoder().encode(pasteObj.content).length / 1024).toFixed(2);
 
