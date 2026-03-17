@@ -14,7 +14,9 @@ async function main() {
 
   const seedData = Array.from({ length: 10 }).map(() => {
     // Define visibility options
-    const visibilities: Visibility[] = ['public', 'private', 'unlisted'];
+    const visibilities: Visibility[] = ['public', 
+      // 'private', 
+      'unlisted'];
 
     // Define possible expiration offsets (in minutes)
     const expirationOffsets = [
