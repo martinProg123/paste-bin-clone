@@ -2,7 +2,9 @@ import { createFileRoute } from '@tanstack/react-router'
 import type { ErrorComponentProps } from '@tanstack/react-router'
 import { useViewPaste } from '../hooks/use-view-paste';
 import { ViewPasteSchema } from '@pastebin/shared';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import hljs from 'highlight.js';
+import 'highlight.js/styles/github-dark.css';
 
 function ViewSlug() {
   const { slug } = Route.useParams();
@@ -10,9 +12,9 @@ function ViewSlug() {
   const [submittedPassword, setSubmittedPassword] = useState('');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [hasAttemptedAuth, setHasAttemptedAuth] = useState(false);
-  
+
   const { data: pasteObj, isLoading, isFetching } = useViewPaste(
-    slug, 
+    slug,
     submittedPassword || undefined,
     true
   );
@@ -42,6 +44,13 @@ function ViewSlug() {
     setHasAttemptedAuth(true);
     setPassword('');
   };
+
+  const highlighted = useMemo(() => {
+    if (!pasteObj?.content) return { value: '', language: 'plaintext' };
+
+    // highlightAuto returns an object with 'value' (HTML) and 'language'
+    return hljs.highlightAuto(pasteObj?.content);
+  }, [pasteObj?.content]);
 
   const showModal = showPasswordModal && !pasteObj?.content;
   const isInitialLoading = isLoading;
@@ -103,7 +112,7 @@ function ViewSlug() {
             <div className="mt-2 text-sm text-gray-500">
               ID: {pasteObj.slug}
             </div>
-            
+
             <div className="mt-2 text-sm text-gray-500">
               Visibility: {pasteObj.visibility.toUpperCase()} | Created: {new Date(pasteObj.createdAt).toLocaleString()}
               | Expired: {pasteObj.expiresAt ? new Date(pasteObj.expiresAt).toLocaleString() : 'Never'}
@@ -114,7 +123,10 @@ function ViewSlug() {
           {pasteObj.content ? (
             <div className=' border border-brand-border bg-brand-slate rounded p-2 '>
               <div className='flex justify-between mb-3'>
-                <div className='text-sm px-2 font-sans my-auto '>{(new TextEncoder().encode(pasteObj.content).length / 1024).toFixed(2)} kb / 500 kb</div>
+                <div className='text-sm px-2 font-sans my-auto flex gap-4'>
+                  <span className="uppercase">Detected: {highlighted.language}</span>
+                  <div className=''>{(new TextEncoder().encode(pasteObj.content).length / 1024).toFixed(2)} kb / 500 kb</div>
+                </div>
                 <div className='flex gap-2 text-brand-green'>
                   <button
                     onClick={async () => {
@@ -152,7 +164,10 @@ function ViewSlug() {
 
               <div>
                 <pre className="mt-4 p-4  hover:bg-[#262729] text-white rounded font-paste whitespace-pre-wrap break-all ">
-                  {pasteObj.content}
+                  <code
+                    className={`hljs language-${highlighted.language}`}
+                    dangerouslySetInnerHTML={{ __html: highlighted.value }}
+                  />
                 </pre>
               </div>
             </div>
