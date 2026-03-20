@@ -176,7 +176,7 @@ function Home() {
                 }}
                 value={text}
                 spellCheck="false"
-                className="w-full h-full p-4 bg-transparent text-white font-mono resize-none focus:outline-none placeholder:opacity-30"
+                className="w-full h-full p-4 bg-transparent text-white font-mono resize-none focus:outline-none placeholder:opacity-30  scrollbar-thin scrollbar-thumb-brand-border"
                 placeholder="Paste your text here..."
               />)
         }

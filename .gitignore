@@ -54,3 +54,4 @@ postgres_data/
 .tanstack
 scratch-board.txt
 *.tsbuildinfo
+AGENTS.md

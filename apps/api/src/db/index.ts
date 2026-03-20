@@ -12,3 +12,4 @@ const {
 const connectionString = `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_HOST_PORT}/${POSTGRES_DB}`;
 const client = postgres(connectionString);
 export const db = drizzle(client, { schema });
+export { client };

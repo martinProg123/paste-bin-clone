@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { db } from './db/index.js';
+import { db, client } from './db/index.js';
 import { pastes } from './db/schema.js';
 import { count, eq, sql, ilike, or, gt, not, and, isNull, desc, lt } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
@@ -8,6 +8,8 @@ import type { CreatePasteInput, Paste } from '@pastebin/shared';
 import { CreatePasteSchema, SearchSchema, ViewPasteSchema, ViewPasteWithPasswordSchema } from '@pastebin/shared';
 import cron from 'node-cron'
 import { randomBytes, createHash } from 'crypto';
+
+const SHUTDOWN_TIMEOUT = 10000;
 
 const app = express();
 
@@ -210,6 +212,56 @@ app.get('/api/viewPaste/:slug', async (req, res) => {
 });
 
 const PORT = process.env.VITE_API_PORT || '4614';
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+});
+
+let isShuttingDown = false;
+
+async function gracefulShutdown(signal: string) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+
+  console.log(`\n${signal} received. Shutting down gracefully...`);
+
+  const timeout = setTimeout(() => {
+    console.error(`\nForced shutdown after ${SHUTDOWN_TIMEOUT}ms timeout`);
+    process.exit(1);
+  }, SHUTDOWN_TIMEOUT);
+
+  try {
+    cron.getTasks().forEach((task) => task.stop());
+    console.log('Cron jobs stopped');
+
+    await new Promise<void>((resolve) => {
+      server.close(() => {
+        console.log('HTTP server closed');
+        resolve();
+      });
+    });
+
+    await client.end();
+    console.log('Database connections closed');
+
+    clearTimeout(timeout);
+    console.log('Shutdown complete');
+    process.exit(0);
+  } catch (error) {
+    console.error('Error during shutdown:', error);
+    clearTimeout(timeout);
+    process.exit(1);
+  }
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  gracefulShutdown('uncaughtException');
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Rejection:', reason);
+  gracefulShutdown('unhandledRejection');
 });
